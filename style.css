@@ -1,0 +1,423 @@
+/* =========================
+   合コンのチーム編成診断
+   style.css（全体リライト）
+   - fieldset/legend を廃止して被りを根絶
+   - :has() を使わず input:checked + span で選択状態を表現
+========================= */
+
+:root {
+    --bg: #111;
+    --panel: rgba(0, 0, 0, .22);
+    --panel2: rgba(255, 255, 255, .04);
+    --line: rgba(255, 255, 255, .12);
+    --line2: rgba(255, 255, 255, .22);
+    --text: rgba(255, 255, 255, .90);
+    --muted: rgba(255, 255, 255, .62);
+    --link: #9ecbff;
+    --warn: #f5c26b;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+    line-height: 1.65;
+}
+
+.container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 18px;
+}
+
+.page-header {
+    margin-bottom: 14px;
+}
+
+.title {
+    font-size: 24px;
+    margin: 0 0 6px;
+    letter-spacing: .02em;
+}
+
+.subtitle {
+    margin: 0;
+    color: var(--muted);
+}
+
+/* =========================
+   フォーム共通
+========================= */
+.form {
+    display: block;
+}
+
+.card {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 14px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(0, 0, 0, .38);
+    color: var(--text);
+    outline: none;
+}
+
+.input:focus {
+    border-color: var(--line2);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .06);
+}
+
+/* =========================
+   質問カード
+========================= */
+.questions {
+    margin-top: 14px;
+}
+
+.qcard {
+    margin: 16px 0;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+}
+
+.qtitle {
+    margin: 0 0 12px;
+    padding: 7px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: #000;
+    color: #fff;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .6);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.qoptions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* =========================
+   選択肢（hover / pressed / checked）
+   - :has() なし
+   - input:checked + .qtext を利用
+========================= */
+
+.qopt {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    padding: 12px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--panel2);
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: transform .08s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+}
+
+@media (hover:hover) {
+    .qopt:hover {
+        border-color: var(--line2);
+        background: rgba(255, 255, 255, .06);
+        transform: translateY(-1px);
+    }
+}
+
+.qopt:active {
+    transform: translateY(0) scale(.99);
+}
+
+/* ラジオ実体は透明にしてクリック領域だけ残す */
+.qradio {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* 左の丸（見た目用） */
+.qopt::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    margin-top: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, .25);
+    background: rgba(0, 0, 0, .35);
+    box-shadow: inset 0 0 0 3px rgba(0, 0, 0, .65);
+}
+
+/* テキスト */
+.qtext {
+    display: block;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, .86);
+    word-break: break-word;
+}
+
+/* checked（選択状態） */
+.qradio:checked~.qtext {
+    color: rgba(255, 255, 255, .92);
+}
+
+.qopt:has(.qradio:checked) {
+    /* 互換性のため :has が効くブラウザではカードも強調 */
+    border-color: rgba(255, 255, 255, .30);
+    background: rgba(255, 255, 255, .08);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .06);
+}
+
+/* :has が効かないブラウザでも “押した感” を出すため、
+   checked の時はテキスト横に薄いマークを付ける */
+.qradio:checked~.qtext::after {
+    content: "  ✓";
+    color: rgba(255, 255, 255, .70);
+    font-weight: 800;
+}
+
+/* 丸の塗りは :has が効く環境で強化（効かなくても致命傷ではない） */
+.qopt:has(.qradio:checked)::before {
+    background: rgba(255, 255, 255, .90);
+    border-color: rgba(255, 255, 255, .65);
+    box-shadow: inset 0 0 0 4px rgba(0, 0, 0, .80);
+}
+
+/* キーボードフォーカス（Tab移動） */
+.qradio:focus-visible~.qtext {
+    outline: 2px solid rgba(158, 203, 255, .55);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+/* =========================
+   送信ボタン
+========================= */
+.submit-btn {
+    margin-top: 18px;
+    width: 100%;
+    padding: 14px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(255, 255, 255, .08);
+    color: rgba(255, 255, 255, .92);
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: transform .08s ease, background .12s ease, border-color .12s ease;
+}
+
+@media (hover:hover) {
+    .submit-btn:hover {
+        background: rgba(255, 255, 255, .12);
+        border-color: rgba(255, 255, 255, .22);
+        transform: translateY(-1px);
+    }
+}
+
+.submit-btn:active {
+    transform: translateY(0) scale(.99);
+}
+
+.footnote {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* =========================
+   結果画面（write.php）
+   既存のクラスを維持して崩さない
+========================= */
+.result-card {
+    margin-top: 16px;
+    padding: 16px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+}
+
+.result-text {
+    margin: 0 0 10px;
+    font-size: 16px;
+    line-height: 1.9;
+}
+
+.result-name {
+    color: rgba(255, 255, 255, .86);
+    font-weight: 700;
+}
+
+.result-role {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.result-sub {
+    color: rgba(255, 255, 255, .72);
+}
+
+.result-desc {
+    margin: 12px 0 0;
+    color: rgba(255, 255, 255, .72);
+    white-space: pre-line;
+}
+
+.result-note {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(245, 194, 107, .30);
+    background: rgba(245, 194, 107, .08);
+    color: rgba(245, 194, 107, .95);
+    font-size: 13px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+a {
+    color: var(--link);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.link {
+    display: inline-block;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .05);
+}
+
+.debug {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.debug pre {
+    margin: 8px 0 0;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: rgba(0, 0, 0, .35);
+    overflow: auto;
+}
+
+@media (max-width:520px) {
+    .container {
+        padding: 14px;
+    }
+
+    .title {
+        font-size: 22px;
+    }
+
+    .qcard {
+        padding: 12px;
+    }
+
+    .qopt {
+        padding: 11px;
+    }
+}
+/* =========================
+   ピッチ表示
+========================= */
+
+.pitch-wrap{
+  margin-top: 20px;
+}
+
+.pitch{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3; /* 縦長ピッチ */
+  max-width: 420px;
+  margin: 0 auto;
+  background: url("images.png") center / cover no-repeat;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.2);
+  overflow: hidden;
+}
+
+/* 各ライン（縦位置だけ決める） */
+.line{
+  position: absolute;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.line.fw{ top: 8%; }
+.line.mf{ top: 35%; }
+.line.df{ top: 62%; }
+.line.gk{ top: 78%; }
+
+/* 選手チップ */
+.player{
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: rgba(0,0,0,.65);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.25);
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+
+/* 役割ごとの微差（雰囲気用） */
+.player.fw{ background: rgba(180,60,60,.85); }
+.player.mf{ background: rgba(60,120,180,.85); }
+.player.df{ background: rgba(60,150,90,.85); }
+.player.gk{ background: rgba(120,120,120,.9); }
